@@ -11,8 +11,8 @@ import java.util.Scanner;
 public class GameOfNim
 {
     private int numMarbles;
-    private int currentTurn;
-    private int difficulty;
+    private boolean isPlayerTurn;
+    private boolean isDifficult;
     
     /**
      * Constructor sets the initial pile of marbles to a random size between the specified minimum and maximum.
@@ -26,10 +26,15 @@ public class GameOfNim
     /**
      * This method generates a random integer between 0 and 1, and uses the value to make yes or no decisions.
      */
-    private int randomDecider()
+    private boolean randomDecider()
     {
        Random randomGenerator = new Random();
-       return randomGenerator.nextInt(2); 
+       int flag = randomGenerator.nextInt(2); 
+       if(flag == 0)
+       {
+           return false;
+       }
+       else return true;
     }
 
     /**
@@ -38,9 +43,8 @@ public class GameOfNim
     private int playerTurn()
     {
         Scanner humanTurn = new Scanner(System.in);
-        System.out.print("Human's Turn: ");
         int marblesRemoved = humanTurn.nextInt();
-        
+
         while(marblesRemoved < 1 || marblesRemoved > numMarbles/2)
           {
               System.out.print("\n" + "Please enter a number between 1 and half of the remaining marbles: ");
@@ -48,6 +52,17 @@ public class GameOfNim
           }
         return marblesRemoved;
     }
+
+    /**
+     * The CPU takes a random number of marbles from the pile, between 1 and half of the pile size.
+     */
+    private int calculateRandomMove()
+    {
+         Random compTurn = new Random();
+         int marblesRemoved = 1 + compTurn.nextInt(numMarbles /2);
+         return marblesRemoved;
+    }
+
     /**
      * The CPU tries to make the pile size a power of 2 minus 1. 
      * It does this by finding the closest power of 2 that is still less than the pile size, and decrements the result.  
@@ -63,61 +78,73 @@ public class GameOfNim
         marblesRemoved--;
         return marblesRemoved;
     }
+
     /**
-     * The CPU takes a random number of marbles from the pile, between 1 and half of the pile size.
+     * Subtract the specified amount from the pile size. 
      */
-    private int calculateRandomMove()
+    private int subtractMarbles(int amount)
     {
-         Random compTurn = new Random();
-         int marblesRemoved = 1 + compTurn.nextInt(numMarbles /2);
-         return marblesRemoved;
+        this.numMarbles -= amount;
     }
 
     /**
-     * This method simulates the game. After the first turn and difficulty are decided, the human and CPU
+     * Check the win condition to see if the game is over.
+     */
+    private boolean checkWinCondition()
+    {
+        if(this.numMarbles == 1)
+        {
+            return true;
+        }
+        else return false;
+    }
+
+    /**
+     * This method simulates the game. After the first turn and difficulty are decided randomly, the human and CPU
      * take turns removing marbles until there is only one marble left. The one who takes the last marble loses.
      */
     public void play()
     {
-       System.out.println("Game begins");
-       System.out.println("Initially there are " + numMarbles + " marbles in the pile");
+        int marblesRemoved;
+        this.isPlayerTurn = randomDecider();
+        this.isDifficult = randomDecider();
+        System.out.println("Game begins");
+        System.out.println("Initially there are " + numMarbles + " marbles in the pile");
 
-       while(numMarbles > 1)
+       while(true)
        {
-           if (currentTurn == 0)
-           {
-             playerTurn();
-             if(numMarbles == 1)
-             {
-                System.out.print("Human Wins!!!" + "\n");
-                break;
-             }
-             turn++;
+            if (isPlayerTurn)
+            {
+                System.out.print("Human's Turn: ");
+                marblesRemoved = playerTurn();
+                subtractMarbles(marblesRemoved);
+                    if(checkWinCondition();)
+                    {
+                        System.out.print("Human Wins!!!" + "\n");
+                        break;
+                    }
+                isPlayerTurn = false;
             }
-            
-           if(turn == 1)
-           {
-             System.out.print("Computer's turn: ");
-               if(difficulty == 0) // Stupid mode
-               {
-                   calculateRandomMove();
-                }
-            
-              if(difficulty == 1) // Smart mode
-              {
-                 {
-                     smartMode();
-                 }
-               }
-               
-              if(numMarbles == 1)
-              {
-                  System.out.print("Computer Wins!!!" + "\n");
-                  break;
-              }
-               turn--;
+
+            else
+            {
+                System.out.print("Computer's turn: ");
+                    if(isDifficult)
+                    {
+                        marblesRemoved = calculateBestMove();
+                    }  
+                    else
+                    {
+                        marblesRemoved = calculateRandomMove(); 
+                    }
+                        subtractMarbles(marblesRemoved);
+                        if(checkWinCondition();)
+                        {
+                            System.out.print("Computer Wins!!!" + "\n");
+                            break;
+                        }
+               isPlayerTurn = true;
             }
-        }
-       
+        }   
     }
 }
