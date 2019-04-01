@@ -11,7 +11,7 @@ import java.util.Scanner;
 public class GameOfNim
 {
     private int numMarbles;
-    private int turn;
+    private int currentTurn;
     private int difficulty;
     
     /**
@@ -19,17 +19,17 @@ public class GameOfNim
      */
     public GameOfNim(int minPileSize, int maxPileSize)
     {
-      Random r = new Random();
-      this.numMarbles = minPileSize + r.nextInt(maxPileSize);
+      Random randomGenerator = new Random();
+      this.numMarbles = minPileSize + randomGenerator.nextInt(maxPileSize);
     }
 
     /**
-     * This method generates a random integer between 0 and 1, and uses the value to determine who gets the first turn.
+     * This method generates a random integer between 0 and 1, and uses the value to make yes or no decisions.
      */
-    private void randomDecider()
+    private int randomDecider()
     {
-       Random x = new Random();
-       turn = x.nextInt(2); 
+       Random randomGenerator = new Random();
+       return randomGenerator.nextInt(2); 
     }
 
     /**
@@ -39,67 +39,52 @@ public class GameOfNim
     {
         Scanner humanTurn = new Scanner(System.in);
         System.out.print("Human's Turn: ");
-        int rmvd = humanTurn.nextInt();
+        int marblesRemoved = humanTurn.nextInt();
         
-        while(rmvd < 1 || rmvd > numMarbles/2)
+        while(marblesRemoved < 1 || marblesRemoved > numMarbles/2)
           {
               System.out.print("\n" + "Please enter a number between 1 and half of the remaining marbles: ");
-              rmvd = humanTurn.nextInt();
+              marblesRemoved = humanTurn.nextInt();
           }
-        return rmvd;
+        return marblesRemoved;
     }
     /**
-     * In this method, the CPU tries to make the pile size a power of 2 minus 1. It does this by finding the closest power of 2 that is less than the current pile size,
-     * and subtracts 1 from the result. 
-     * 
+     * The CPU tries to make the pile size a power of 2 minus 1. 
+     * It does this by finding the closest power of 2 that is still less than the pile size, and decrements the result.  
      */
     
-    private void smartMode()
+    private int calculateBestMove()
     {
-        int power = 2;      
-        while (power < numMarbles) 
+        int marblesRemoved = 2; 
+        while (marblesRemoved *2 < numMarbles) 
         { 
-            power *= 2;
+            marblesRemoved *= 2;
         }
-        power = power / 2; // We want the closest power of 2 that is still less than the number of marbles. After the loop, power is greater than the pile size.
-        int target = power -1;
-        int rmvd = numMarbles - targetMarbles; 
-        if (numMarbles == 2) 
-        {
-            rmvd = 1;
-        }
-        numMarbles -= rmvd;
-        System.out.println("Removed " + rmvd + " marble(s)." + "Current number of marbles: " + numMarbles);
+        marblesRemoved--;
+        return marblesRemoved;
     }
     /**
-     * In this method, the CPU takes a random number of marbles from the pile, between 1 and half of the pile size.
+     * The CPU takes a random number of marbles from the pile, between 1 and half of the pile size.
      */
-    private void stupidMode()
+    private int calculateRandomMove()
     {
          Random compTurn = new Random();
-         int rmvd = compTurn.nextInt(numMarbles/ 2);
-          if(rmvd < 1) // Illegal move, must take at least 1.
-         {
-            rmvd = 1;
-         }
-         numMarbles -= rmvd;
-         System.out.println("Removed " + rmvd + " marble(s)." + "   Current number of marbles: " + numMarbles);
+         int marblesRemoved = 1 + compTurn.nextInt(numMarbles /2);
+         return marblesRemoved;
     }
 
     /**
-     * This method calls all the private methods to determine the parameters of the game. After the first turn and difficulty are decided, the human and CPU
-     * take turns removing marbles until there is only one marble left. The one who takes the last marble loses!
+     * This method simulates the game. After the first turn and difficulty are decided, the human and CPU
+     * take turns removing marbles until there is only one marble left. The one who takes the last marble loses.
      */
     public void play()
     {
        System.out.println("Game begins");
        System.out.println("Initially there are " + numMarbles + " marbles in the pile");
-       
-        
-       
+
        while(numMarbles > 1)
        {
-           if (turn == 0)
+           if (currentTurn == 0)
            {
              playerTurn();
              if(numMarbles == 1)
@@ -115,7 +100,7 @@ public class GameOfNim
              System.out.print("Computer's turn: ");
                if(difficulty == 0) // Stupid mode
                {
-                   stupidMode();
+                   calculateRandomMove();
                 }
             
               if(difficulty == 1) // Smart mode
